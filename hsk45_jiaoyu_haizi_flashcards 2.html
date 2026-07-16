@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教育孩子 · HSK4-5 Flashcards</title>
+<style>
+  :root{
+    --paper: #f3f6f8;
+    --grid-line: #cfdce4;
+    --ink: #1f2d33;
+    --ink-soft: #5f7480;
+    --seal-blue: #2a5f7a;
+    --seal-blue-soft: #4f87a3;
+    --accent: #1f6f8b;
+    --card-back-paper: #e9f1f4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:32px 20px 60px;
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    font-family: "Noto Serif TC", "Songti TC", serif;
+    color: var(--ink);
+    min-height:100vh;
+  }
+  .header{
+    max-width:1000px;
+    margin:0 auto 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  h1{
+    font-weight:600;
+    font-size:1.4rem;
+    letter-spacing:0.15em;
+    margin:0;
+    color: var(--seal-blue);
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size:0.8rem;
+    letter-spacing:0.02em;
+    margin-top:4px;
+  }
+  .controls{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  #shuffleBtn{
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    font-size:0.8rem;
+    letter-spacing:0.05em;
+    background: var(--seal-blue);
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:3px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    transition: background 0.2s, transform 0.15s;
+  }
+  #shuffleBtn:hover{ background: var(--accent); }
+  #shuffleBtn:active{ transform: scale(0.96); }
+  #shuffleBtn svg{ width:15px; height:15px; }
+  .counter{
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    font-size:0.75rem;
+    color:var(--ink-soft);
+  }
+  .deck{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap:26px;
+    max-width:1000px;
+    margin:0 auto;
+  }
+  .card-slot{
+    perspective: 1400px;
+    height:360px;
+    animation: fadeIn 0.35s ease both;
+  }
+  @keyframes fadeIn{
+    from{ opacity:0; transform: translateY(6px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .card{
+    position:relative;
+    width:100%;
+    height:100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(.4,.2,.2,1);
+    cursor:pointer;
+  }
+  .card-slot.flipped .card{
+    transform: rotateY(180deg);
+  }
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border-radius:2px;
+    border:1px solid var(--grid-line);
+    box-shadow: 0 2px 10px rgba(31,45,51,0.08);
+    padding:22px 20px;
+    display:flex;
+    flex-direction:column;
+  }
+  .front{
+    background:var(--paper);
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .front .seal{
+    position:absolute;
+    top:14px; right:14px;
+    width:34px; height:34px;
+    border:2px solid var(--seal-blue-soft);
+    border-radius:3px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--seal-blue);
+    font-size:0.7rem;
+    opacity:0.75;
+    transform:rotate(2deg);
+  }
+  .front .idx{
+    position:absolute;
+    top:16px; left:16px;
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    font-size:0.65rem;
+    color:var(--ink-soft);
+    opacity:0.6;
+    letter-spacing:0.05em;
+  }
+  .hanzi{
+    font-size:3.2rem;
+    font-weight:600;
+    line-height:1.1;
+    letter-spacing:0.05em;
+  }
+  .hanzi .trad{
+    font-size:1.05rem;
+    color:var(--ink-soft);
+    font-weight:400;
+    margin-left:10px;
+    font-family: "Noto Serif TC", serif;
+  }
+  .pinyin{
+    margin-top:10px;
+    color:var(--accent);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size:1.05rem;
+    letter-spacing:0.03em;
+  }
+  .tap-hint{
+    position:absolute;
+    bottom:12px; left:0; right:0;
+    text-align:center;
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    font-size:0.68rem;
+    color:var(--ink-soft);
+    letter-spacing:0.08em;
+    opacity:0.6;
+  }
+  .back{
+    background:var(--card-back-paper);
+    transform: rotateY(180deg);
+    overflow-y:auto;
+    text-align:left;
+  }
+  .back::-webkit-scrollbar{width:5px;}
+  .back::-webkit-scrollbar-thumb{background:var(--grid-line);border-radius:3px;}
+  .back .word-tag{
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    font-size:0.7rem;
+    color:var(--seal-blue);
+    letter-spacing:0.1em;
+    border-bottom:1px dashed var(--grid-line);
+    padding-bottom:6px;
+    margin-bottom:10px;
+  }
+  .section-label{
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    font-size:0.62rem;
+    letter-spacing:0.12em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin:10px 0 3px;
+  }
+  .meaning{
+    font-size:1rem;
+    font-weight:600;
+  }
+  .collo-item{
+    font-size:0.9rem;
+    margin-bottom:2px;
+  }
+  .collo-item .cp{
+    color:var(--ink-soft);
+    font-size:0.78rem;
+    font-family:"Helvetica Neue", Arial, sans-serif;
+  }
+  .example-short{
+    font-size:0.9rem;
+    line-height:1.55;
+  }
+  .example-short .py-note{
+    color:var(--ink-soft);
+    font-size:0.72rem;
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    display:block;
+    margin-top:2px;
+  }
+  .example-vn-short{
+    font-size:0.76rem;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin-top:3px;
+    font-family:"Helvetica Neue", Arial, sans-serif;
+  }
+  .example{
+    font-size:0.92rem;
+    line-height:1.65;
+  }
+  .example .py-note{
+    color:var(--ink-soft);
+    font-size:0.75rem;
+    font-family:"Helvetica Neue", Arial, sans-serif;
+    display:block;
+    margin-top:4px;
+  }
+  .example-vn{
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin-top:5px;
+    font-family:"Helvetica Neue", Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>教育孩子</h1>
+    <div class="sub">HSK4–5 · Bấm thẻ để lật · <span class="counter" id="counter">60 từ</span></div>
+  </div>
+  <div class="controls">
+    <button id="shuffleBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+      Xáo trộn
+    </button>
+  </div>
+</div>
+
+<div class="deck" id="deck"></div>
+
+<script>
+const CARDS = [
+ {
+  "simp": "教育",
+  "trad": "教育",
+  "py": "jiàoyù",
+  "seal": "教",
+  "meaning": "giáo dục, dạy dỗ",
+  "collo": [
+   [
+    "教育孩子",
+    "jiàoyù háizi",
+    "dạy con"
+   ],
+   [
+    "教育方式",
+    "jiàoyù fāngshì",
+    "phương pháp giáo dục"
+   ]
+  ],
+  "sHz": "父母应该重视孩子的教育。",
+  "sPy": "Fùmǔ yīnggāi zhòngshì háizi de jiàoyù.",
+  "sVn": "Cha mẹ nên coi trọng việc giáo dục con cái.",
+  "lHz": "现在越来越多的父母<b>意识到</b>,教育孩子不能只靠打骂,而要用<b>耐心</b>和沟通去引导他们。",
+  "lPy": "意识到 yìshí dào · 耐心 nàixīn",
+  "lVn": "Ngày càng nhiều bậc cha mẹ nhận ra rằng dạy con không thể chỉ dựa vào đòn roi mắng mỏ, mà phải dùng sự kiên nhẫn và giao tiếp để dẫn dắt con."
+ },
+ {
+  "simp": "培养",
+  "trad": "培養",
+  "py": "péiyǎng",
+  "seal": "培",
+  "meaning": "bồi dưỡng, rèn luyện",
+  "collo": [
+   [
+    "培养习惯",
+    "péiyǎng xíguàn",
+    "rèn thói quen"
+   ],
+   [
+    "培养独立性",
+    "péiyǎng dúlìxìng",
+    "rèn tính độc lập"
+   ]
+  ],
+  "sHz": "阅读能培养孩子的想像力。",
+  "sPy": "Yuèdú néng péiyǎng háizi de xiǎngxiànglì.",
+  "sVn": "Đọc sách có thể bồi dưỡng trí tưởng tượng của trẻ.",
+  "lHz": "从小培养孩子的<b>阅读</b>习惯,对他们将来的学习能力会有很大的帮助。",
+  "lPy": "阅读 yuèdú",
+  "lVn": "Rèn thói quen đọc sách cho trẻ từ nhỏ sẽ giúp ích rất nhiều cho khả năng học tập của chúng sau này."
+ },
+ {
+  "simp": "培训",
+  "trad": "培訓",
+  "py": "péixùn",
+  "seal": "訓",
+  "meaning": "đào tạo, huấn luyện",
+  "collo": [
+   [
+    "职业培训",
+    "zhíyè péixùn",
+    "đào tạo nghề"
+   ],
+   [
+    "参加培训",
+    "cānjiā péixùn",
+    "tham gia đào tạo"
+   ]
+  ],
+  "sHz": "这家公司提供员工培训。",
+  "sPy": "Zhè jiā gōngsī tígōng yuángōng péixùn.",
+  "sVn": "Công ty này cung cấp đào tạo cho nhân viên.",
+  "lHz": "为了让老师更了解学生的心理,学校<b>定期</b>举办教学培训课程。",
+  "lPy": "定期 dìngqī",
+  "lVn": "Để giáo viên hiểu rõ hơn tâm lý học sinh, trường tổ chức định kỳ các khóa đào tạo giảng dạy."
+ },
+ {
+  "simp": "引导",
+  "trad": "引導",
+  "py": "yǐndǎo",
+  "seal": "引",
+  "meaning": "dẫn dắt, hướng dẫn",
+  "collo": [
+   [
+    "引导孩子",
+    "yǐndǎo háizi",
+    "dẫn dắt trẻ"
+   ],
+   [
+    "正确引导",
+    "zhèngquè yǐndǎo",
+    "hướng dẫn đúng đắn"
+   ]
+  ],
+  "sHz": "老师耐心地引导学生思考。",
+  "sPy": "Lǎoshī nàixīn de yǐndǎo xuésheng sīkǎo.",
+  "sVn": "Thầy cô kiên nhẫn dẫn dắt học sinh suy nghĩ.",
+  "lHz": "遇到孩子犯错的时候,父母应该<b>冷静</b>地引导他们<b>反省</b>,而不是一味责骂。",
+  "lPy": "冷静 lěngjìng · 反省 fǎnxǐng",
+  "lVn": "Khi con phạm lỗi, cha mẹ nên bình tĩnh dẫn dắt con tự kiểm điểm, chứ không phải chỉ mắng mỏ."
+ },
+ {
+  "simp": "教养",
+  "trad": "教養",
+  "py": "jiàoyǎng",
+  "seal": "養",
+  "meaning": "giáo dưỡng, cách dạy dỗ",
+  "collo": [
+   [
+    "有教养",
+    "yǒu jiàoyǎng",
+    "có giáo dưỡng"
+   ],
+   [
+    "家庭教养",
+    "jiātíng jiàoyǎng",
+    "giáo dưỡng gia đình"
+   ]
+  ],
+  "sHz": "这个孩子很有教养。",
+  "sPy": "Zhège háizi hěn yǒu jiàoyǎng.",
+  "sVn": "Đứa trẻ này rất có giáo dưỡng.",
+  "lHz": "一个人的教养,往往能从他对待<b>陌生人</b>的<b>态度</b>看出来。",
+  "lPy": "陌生人 mòshēngrén · 态度 tàidù",
+  "lVn": "Sự giáo dưỡng của một người thường có thể nhìn ra từ thái độ của họ với người lạ."
+ },
+ {
+  "simp": "管教",
+  "trad": "管教",
+  "py": "guǎnjiào",
+  "seal": "管",
+  "meaning": "quản giáo, dạy bảo",
+  "collo": [
+   [
+    "管教孩子",
+    "guǎnjiào háizi",
+    "dạy bảo con"
+   ],
+   [
+    "严加管教",
+    "yánjiā guǎnjiào",
+    "quản giáo nghiêm khắc"
+   ]
+  ],
+  "sHz": "父母不能不管教孩子。",
+  "sPy": "Fùmǔ bù néng bù guǎnjiào háizi.",
+  "sVn": "Cha mẹ không thể không dạy bảo con.",
+  "lHz": "老一辈常说「不打不成器」,但现代的管教<b>观念</b>更强调沟通而非<b>体罚</b>。",
+  "lPy": "观念 guānniàn · 体罚 tǐfá",
+  "lVn": "Người xưa hay nói \"không đánh không nên người\", nhưng quan niệm dạy con hiện đại nhấn mạnh giao tiếp hơn là đòn roi."
+ },
+ {
+  "simp": "溺爱",
+  "trad": "溺愛",
+  "py": "nì'ài",
+  "seal": "溺",
+  "meaning": "nuông chiều quá mức",
+  "collo": [
+   [
+    "溺爱孩子",
+    "nì'ài háizi",
+    "nuông chiều con"
+   ],
+   [
+    "过度溺爱",
+    "guòdù nì'ài",
+    "nuông chiều thái quá"
+   ]
+  ],
+  "sHz": "太溺爱孩子对他没有好处。",
+  "sPy": "Tài nì'ài háizi duì tā méiyǒu hǎochù.",
+  "sVn": "Quá nuông chiều con không tốt cho nó.",
+  "lHz": "爷爷奶奶常常过度溺爱孙子,什么要求都<b>答应</b>,结果让孩子变得很任性。",
+  "lPy": "答应 dāying",
+  "lVn": "Ông bà thường nuông chiều cháu quá mức, yêu cầu gì cũng đồng ý, kết quả khiến đứa trẻ trở nên rất ương bướng."
+ },
+ {
+  "simp": "严格",
+  "trad": "嚴格",
+  "py": "yángé",
+  "seal": "嚴",
+  "meaning": "nghiêm khắc",
+  "collo": [
+   [
+    "严格要求",
+    "yángé yāoqiú",
+    "yêu cầu nghiêm khắc"
+   ],
+   [
+    "对孩子很严格",
+    "duì háizi hěn yángé",
+    "nghiêm khắc với con"
+   ]
+  ],
+  "sHz": "这位老师对学生很严格。",
+  "sPy": "Zhè wèi lǎoshī duì xuésheng hěn yángé.",
+  "sVn": "Thầy giáo này rất nghiêm khắc với học sinh.",
+  "lHz": "父亲从小对他要求严格,这也是他长大后做事<b>认真负责</b>的原因之一。",
+  "lPy": "认真负责 rènzhēn fùzé",
+  "lVn": "Cha nghiêm khắc với anh ấy từ nhỏ, đây cũng là một lý do khiến anh làm việc nghiêm túc có trách nhiệm khi lớn lên."
+ },
+ {
+  "simp": "纵容",
+  "trad": "縱容",
+  "py": "zòngróng",
+  "seal": "縱",
+  "meaning": "dung túng",
+  "collo": [
+   [
+    "纵容孩子",
+    "zòngróng háizi",
+    "dung túng con"
+   ],
+   [
+    "一味纵容",
+    "yíwèi zòngróng",
+    "cứ mãi dung túng"
+   ]
+  ],
+  "sHz": "不能一味纵容孩子的坏习惯。",
+  "sPy": "Bù néng yíwèi zòngróng háizi de huài xíguàn.",
+  "sVn": "Không thể cứ dung túng thói xấu của con.",
+  "lHz": "如果父母一直纵容孩子的<b>无理</b>要求,孩子就会<b>误以为</b>所有事情都能靠哭闹解决。",
+  "lPy": "无理 wúlǐ · 误以为 wùyǐwéi",
+  "lVn": "Nếu cha mẹ cứ dung túng những đòi hỏi vô lý của con, con sẽ hiểu lầm rằng mọi việc đều có thể giải quyết bằng khóc lóc."
+ },
+ {
+  "simp": "灌输",
+  "trad": "灌輸",
+  "py": "guànshū",
+  "seal": "灌",
+  "meaning": "truyền đạt, nhồi nhét (tư tưởng)",
+  "collo": [
+   [
+    "灌输观念",
+    "guànshū guānniàn",
+    "truyền đạt quan niệm"
+   ],
+   [
+    "灌输思想",
+    "guànshū sīxiǎng",
+    "nhồi nhét tư tưởng"
+   ]
+  ],
+  "sHz": "父母常灌输孩子正确的价值观。",
+  "sPy": "Fùmǔ cháng guànshū háizi zhèngquè de jiàzhíguān.",
+  "sVn": "Cha mẹ thường truyền đạt cho con giá trị quan đúng đắn.",
+  "lHz": "学校教育不应该只是灌输知识,更重要的是培养学生<b>独立思考</b>的能力。",
+  "lPy": "独立思考 dúlì sīkǎo",
+  "lVn": "Giáo dục nhà trường không nên chỉ là nhồi nhét kiến thức, quan trọng hơn là bồi dưỡng khả năng tư duy độc lập của học sinh."
+ },
+ {
+  "simp": "榜样",
+  "trad": "榜樣",
+  "py": "bǎngyàng",
+  "seal": "榜",
+  "meaning": "tấm gương",
+  "collo": [
+   [
+    "树立榜样",
+    "shùlì bǎngyàng",
+    "làm gương"
+   ],
+   [
+    "做孩子的榜样",
+    "zuò háizi de bǎngyàng",
+    "làm gương cho con"
+   ]
+  ],
+  "sHz": "父母是孩子最好的榜样。",
+  "sPy": "Fùmǔ shì háizi zuì hǎo de bǎngyàng.",
+  "sVn": "Cha mẹ là tấm gương tốt nhất cho con.",
+  "lHz": "如果父母自己都不<b>遵守</b>规矩,又怎么能要求孩子以他们为榜样呢?",
+  "lPy": "遵守 zūnshǒu",
+  "lVn": "Nếu chính cha mẹ không tuân theo quy tắc, thì làm sao có thể yêu cầu con lấy họ làm gương?"
+ },
+ {
+  "simp": "以身作则",
+  "trad": "以身作則",
+  "py": "yǐshēnzuòzé",
+  "seal": "則",
+  "meaning": "làm gương bằng hành động",
+  "collo": [
+   [
+    "父母以身作则",
+    "fùmǔ yǐshēnzuòzé",
+    "cha mẹ làm gương bằng hành động"
+   ]
+  ],
+  "sHz": "老师应该以身作则。",
+  "sPy": "Lǎoshī yīnggāi yǐshēnzuòzé.",
+  "sVn": "Thầy cô nên làm gương bằng hành động.",
+  "lHz": "想让孩子养成阅读的习惯,父母最好的方法就是自己以身作则,常常看书。",
+  "lPy": "养成 yǎngchéng",
+  "lVn": "Muốn con hình thành thói quen đọc sách, cách tốt nhất là cha mẹ tự làm gương, thường xuyên đọc sách."
+ },
+ {
+  "simp": "因材施教",
+  "trad": "因材施教",
+  "py": "yīncáishījiào",
+  "seal": "因",
+  "meaning": "dạy học theo năng lực từng người",
+  "collo": [
+   [
+    "老师因材施教",
+    "lǎoshī yīncáishījiào",
+    "thầy cô dạy theo năng lực học sinh"
+   ]
+  ],
+  "sHz": "好老师懂得因材施教。",
+  "sPy": "Hǎo lǎoshī dǒngde yīncáishījiào.",
+  "sVn": "Thầy cô giỏi biết dạy theo năng lực từng học sinh.",
+  "lHz": "每个孩子的学习方式都不一样,老师应该因材施教,而不是用同一套<b>标准</b>要求所有人。",
+  "lPy": "标准 biāozhǔn",
+  "lVn": "Mỗi đứa trẻ có cách học khác nhau, thầy cô nên dạy theo năng lực từng người, chứ không dùng một tiêu chuẩn áp cho tất cả."
+ },
+ {
+  "simp": "言传身教",
+  "trad": "言傳身教",
+  "py": "yánchuánshēnjiào",
+  "seal": "言",
+  "meaning": "dạy bằng lời nói và hành động",
+  "collo": [
+   [
+    "父母言传身教",
+    "fùmǔ yánchuánshēnjiào",
+    "cha mẹ dạy bằng lời và hành động"
+   ]
+  ],
+  "sHz": "教育孩子需要言传身教。",
+  "sPy": "Jiàoyù háizi xūyào yánchuánshēnjiào.",
+  "sVn": "Dạy con cần cả lời nói lẫn hành động làm gương.",
+  "lHz": "比起单纯的<b>说教</b>,言传身教更能让孩子从小养成良好的<b>品格</b>。",
+  "lPy": "说教 shuōjiào · 品格 pǐngé",
+  "lVn": "So với việc chỉ giảng giải suông, dạy bằng cả lời nói và hành động giúp trẻ hình thành phẩm chất tốt từ nhỏ hơn."
+ },
+ {
+  "simp": "性格",
+  "trad": "性格",
+  "py": "xìnggé",
+  "seal": "性",
+  "meaning": "tính cách",
+  "collo": [
+   [
+    "性格内向",
+    "xìnggé nèixiàng",
+    "tính cách hướng nội"
+   ],
+   [
+    "塑造性格",
+    "sùzào xìnggé",
+    "định hình tính cách"
+   ]
+  ],
+  "sHz": "每个孩子的性格都不一样。",
+  "sPy": "Měi ge háizi de xìnggé dōu bù yíyàng.",
+  "sVn": "Tính cách mỗi đứa trẻ đều khác nhau.",
+  "lHz": "家庭环境对孩子性格的<b>形成</b>有很深的影响。",
+  "lPy": "形成 xíngchéng",
+  "lVn": "Môi trường gia đình có ảnh hưởng sâu sắc đến việc hình thành tính cách của trẻ."
+ },
+ {
+  "simp": "个性",
+  "trad": "個性",
+  "py": "gèxìng",
+  "seal": "個",
+  "meaning": "cá tính",
+  "collo": [
+   [
+    "尊重孩子的个性",
+    "zūnzhòng háizi de gèxìng",
+    "tôn trọng cá tính của trẻ"
+   ],
+   [
+    "个性强",
+    "gèxìng qiáng",
+    "cá tính mạnh"
+   ]
+  ],
+  "sHz": "这个孩子个性很强。",
+  "sPy": "Zhège háizi gèxìng hěn qiáng.",
+  "sVn": "Đứa trẻ này cá tính rất mạnh.",
+  "lHz": "每个孩子都有自己的个性,父母应该学会尊重,而不是<b>强迫</b>他们变成同一个样子。",
+  "lPy": "强迫 qiǎngpò",
+  "lVn": "Mỗi đứa trẻ đều có cá tính riêng, cha mẹ nên học cách tôn trọng, chứ không ép chúng trở thành giống nhau."
+ },
+ {
+  "simp": "天赋",
+  "trad": "天賦",
+  "py": "tiānfù",
+  "seal": "天",
+  "meaning": "thiên phú, năng khiếu",
+  "collo": [
+   [
+    "发现天赋",
+    "fāxiàn tiānfù",
+    "phát hiện thiên phú"
+   ],
+   [
+    "有音乐天赋",
+    "yǒu yīnyuè tiānfù",
+    "có năng khiếu âm nhạc"
+   ]
+  ],
+  "sHz": "每个孩子都有自己的天赋。",
+  "sPy": "Měi ge háizi dōu yǒu zìjǐ de tiānfù.",
+  "sVn": "Mỗi đứa trẻ đều có thiên phú riêng.",
+  "lHz": "父母应该多<b>留意</b>孩子的兴趣,<b>及早</b>发现他们的天赋。",
+  "lPy": "留意 liúyì · 及早 jízǎo",
+  "lVn": "Cha mẹ nên chú ý đến sở thích của con, sớm phát hiện thiên phú của chúng."
+ },
+ {
+  "simp": "独立",
+  "trad": "獨立",
+  "py": "dúlì",
+  "seal": "獨",
+  "meaning": "độc lập",
+  "collo": [
+   [
+    "培养独立性",
+    "péiyǎng dúlìxìng",
+    "rèn tính độc lập"
+   ],
+   [
+    "独立思考",
+    "dúlì sīkǎo",
+    "tư duy độc lập"
+   ]
+  ],
+  "sHz": "父母应该让孩子学会独立。",
+  "sPy": "Fùmǔ yīnggāi ràng háizi xuéhuì dúlì.",
+  "sVn": "Cha mẹ nên để con học cách độc lập.",
+  "lHz": "从小让孩子自己<b>整理</b>房间、<b>规划</b>时间,能帮助他们培养独立生活的能力。",
+  "lPy": "整理 zhěnglǐ · 规划 guīhuà",
+  "lVn": "Để con tự dọn phòng, sắp xếp thời gian từ nhỏ giúp trẻ rèn khả năng sống độc lập."
+ },
+ {
+  "simp": "依赖",
+  "trad": "依賴",
+  "py": "yīlài",
+  "seal": "依",
+  "meaning": "phụ thuộc, ỷ lại",
+  "collo": [
+   [
+    "依赖父母",
+    "yīlài fùmǔ",
+    "phụ thuộc bố mẹ"
+   ],
+   [
+    "过分依赖",
+    "guòfèn yīlài",
+    "ỷ lại quá mức"
+   ]
+  ],
+  "sHz": "他从小就很依赖父母。",
+  "sPy": "Tā cóngxiǎo jiù hěn yīlài fùmǔ.",
+  "sVn": "Anh ấy từ nhỏ đã rất ỷ lại bố mẹ.",
+  "lHz": "如果<b>凡事</b>都帮孩子做好,他们长大后很容易变得过分依赖别人。",
+  "lPy": "凡事 fánshì",
+  "lVn": "Nếu việc gì cũng làm sẵn cho con, khi lớn lên trẻ rất dễ trở nên ỷ lại người khác quá mức."
+ },
+ {
+  "simp": "自律",
+  "trad": "自律",
+  "py": "zìlǜ",
+  "seal": "律",
+  "meaning": "tự giác, tự kỷ luật",
+  "collo": [
+   [
+    "培养自律能力",
+    "péiyǎng zìlǜ nénglì",
+    "rèn khả năng tự giác"
+   ],
+   [
+    "学会自律",
+    "xuéhuì zìlǜ",
+    "học cách tự kỷ luật"
+   ]
+  ],
+  "sHz": "自律的孩子更容易成功。",
+  "sPy": "Zìlǜ de háizi gèng róngyì chénggōng.",
+  "sVn": "Đứa trẻ tự giác dễ thành công hơn.",
+  "lHz": "与其一直<b>监督</b>孩子写作业,不如从小培养他们自律的习惯。",
+  "lPy": "监督 jiāndū",
+  "lVn": "Thay vì cứ giám sát con làm bài tập, không bằng rèn cho chúng thói quen tự giác từ nhỏ."
+ },
+ {
+  "simp": "自信",
+  "trad": "自信",
+  "py": "zìxìn",
+  "seal": "信",
+  "meaning": "tự tin",
+  "collo": [
+   [
+    "建立自信",
+    "jiànlì zìxìn",
+    "xây dựng tự tin"
+   ],
+   [
+    "缺乏自信",
+    "quēfá zìxìn",
+    "thiếu tự tin"
+   ]
+  ],
+  "sHz": "鼓励能让孩子更有自信。",
+  "sPy": "Gǔlì néng ràng háizi gèng yǒu zìxìn.",
+  "sVn": "Sự khích lệ có thể khiến trẻ tự tin hơn.",
+  "lHz": "经常被<b>否定</b>的孩子,长大后往往容易缺乏自信。",
+  "lPy": "否定 fǒudìng",
+  "lVn": "Đứa trẻ thường xuyên bị phủ nhận, khi lớn lên thường dễ thiếu tự tin."
+ },
+ {
+  "simp": "叛逆",
+  "trad": "叛逆",
+  "py": "pànnì",
+  "seal": "叛",
+  "meaning": "nổi loạn (tính cách)",
+  "collo": [
+   [
+    "叛逆期",
+    "pànnìqī",
+    "giai đoạn nổi loạn"
+   ],
+   [
+    "进入叛逆期",
+    "jìnrù pànnìqī",
+    "bước vào tuổi nổi loạn"
+   ]
+  ],
+  "sHz": "每个孩子都会经历叛逆期。",
+  "sPy": "Měi ge háizi dōu huì jīnglì pànnìqī.",
+  "sVn": "Đứa trẻ nào cũng sẽ trải qua giai đoạn nổi loạn.",
+  "lHz": "孩子一到叛逆期,就开始跟父母<b>顶嘴</b>,甚至故意做一些让大人生气的事。",
+  "lPy": "顶嘴 dǐngzuǐ",
+  "lVn": "Vừa bước vào tuổi nổi loạn, đứa trẻ bắt đầu cãi lại bố mẹ, thậm chí cố tình làm những việc khiến người lớn tức giận."
+ },
+ {
+  "simp": "任性",
+  "trad": "任性",
+  "py": "rènxìng",
+  "seal": "任",
+  "meaning": "ương bướng, tùy tiện",
+  "collo": [
+   [
+    "孩子很任性",
+    "háizi hěn rènxìng",
+    "đứa trẻ rất ương bướng"
+   ],
+   [
+    "变得任性",
+    "biàn de rènxìng",
+    "trở nên ương bướng"
+   ]
+  ],
+  "sHz": "被宠坏的孩子容易任性。",
+  "sPy": "Bèi chǒnghuài de háizi róngyì rènxìng.",
+  "sVn": "Trẻ bị nuông chiều hư dễ trở nên ương bướng.",
+  "lHz": "因为家里的每个人都<b>顺着</b>他,这孩子变得越来越任性。",
+  "lPy": "顺着 shùnzhe",
+  "lVn": "Vì ai trong nhà cũng chiều theo, đứa trẻ này ngày càng trở nên ương bướng."
+ },
+ {
+  "simp": "懂事",
+  "trad": "懂事",
+  "py": "dǒngshì",
+  "seal": "懂",
+  "meaning": "hiểu chuyện, biết điều",
+  "collo": [
+   [
+    "孩子很懂事",
+    "háizi hěn dǒngshì",
+    "đứa trẻ rất hiểu chuyện"
+   ],
+   [
+    "变得懂事",
+    "biàn de dǒngshì",
+    "trở nên hiểu chuyện"
+   ]
+  ],
+  "sHz": "这孩子从小就很懂事。",
+  "sPy": "Zhè háizi cóngxiǎo jiù hěn dǒngshì.",
+  "sVn": "Đứa trẻ này từ nhỏ đã rất hiểu chuyện.",
+  "lHz": "因为家里<b>经济</b>不好,他很小就变得非常懂事,<b>主动</b>帮忙做家事。",
+  "lPy": "经济 jīngjì · 主动 zhǔdòng",
+  "lVn": "Vì kinh tế gia đình không tốt, cậu bé rất sớm trở nên hiểu chuyện, chủ động giúp việc nhà."
+ },
+ {
+  "simp": "幼稚",
+  "trad": "幼稚",
+  "py": "yòuzhì",
+  "seal": "幼",
+  "meaning": "ấu trĩ, non nớt",
+  "collo": [
+   [
+    "想法幼稚",
+    "xiǎngfǎ yòuzhì",
+    "suy nghĩ ấu trĩ"
+   ],
+   [
+    "行为幼稚",
+    "xíngwéi yòuzhì",
+    "hành vi non nớt"
+   ]
+  ],
+  "sHz": "这种想法太幼稚了。",
+  "sPy": "Zhè zhǒng xiǎngfǎ tài yòuzhì le.",
+  "sVn": "Suy nghĩ này quá ấu trĩ.",
+  "lHz": "虽然他已经上高中了,但有些行为还是<b>显得</b>很幼稚。",
+  "lPy": "显得 xiǎnde",
+  "lVn": "Dù đã học cấp ba, nhưng một số hành vi của cậu vẫn tỏ ra rất non nớt."
+ },
+ {
+  "simp": "成熟",
+  "trad": "成熟",
+  "py": "chéngshú",
+  "seal": "成",
+  "meaning": "trưởng thành, chín chắn",
+  "collo": [
+   [
+    "心理成熟",
+    "xīnlǐ chéngshú",
+    "tâm lý trưởng thành"
+   ],
+   [
+    "变得成熟",
+    "biàn de chéngshú",
+    "trở nên chín chắn"
+   ]
+  ],
+  "sHz": "经历让人变得成熟。",
+  "sPy": "Jīnglì ràng rén biàn de chéngshú.",
+  "sVn": "Trải nghiệm khiến con người trở nên chín chắn.",
+  "lHz": "经历过父母<b>离婚</b>之后,他变得比<b>同龄人</b>更加成熟。",
+  "lPy": "离婚 líhūn · 同龄人 tónglíngrén",
+  "lVn": "Sau khi trải qua việc bố mẹ ly hôn, cậu ấy trở nên chín chắn hơn so với bạn cùng tuổi."
+ },
+ {
+  "simp": "好奇心",
+  "trad": "好奇心",
+  "py": "hàoqíxīn",
+  "seal": "奇",
+  "meaning": "tính tò mò",
+  "collo": [
+   [
+    "激发好奇心",
+    "jīfā hàoqíxīn",
+    "khơi dậy tò mò"
+   ],
+   [
+    "满足好奇心",
+    "mǎnzú hàoqíxīn",
+    "thỏa mãn tò mò"
+   ]
+  ],
+  "sHz": "孩子对世界充满好奇心。",
+  "sPy": "Háizi duì shìjiè chōngmǎn hàoqíxīn.",
+  "sVn": "Trẻ tràn đầy tò mò về thế giới.",
+  "lHz": "与其直接告诉孩子答案,不如引导他们自己去<b>探索</b>,激发好奇心。",
+  "lPy": "探索 tànsuǒ",
+  "lVn": "Thay vì trực tiếp nói đáp án cho trẻ, không bằng dẫn dắt chúng tự khám phá, khơi dậy tính tò mò."
+ },
+ {
+  "simp": "想象力",
+  "trad": "想像力",
+  "py": "xiǎngxiànglì",
+  "seal": "想",
+  "meaning": "trí tưởng tượng",
+  "collo": [
+   [
+    "发挥想像力",
+    "fāhuī xiǎngxiànglì",
+    "phát huy trí tưởng tượng"
+   ],
+   [
+    "丰富的想像力",
+    "fēngfù de xiǎngxiànglì",
+    "trí tưởng tượng phong phú"
+   ]
+  ],
+  "sHz": "画画能培养孩子的想像力。",
+  "sPy": "Huàhuà néng péiyǎng háizi de xiǎngxiànglì.",
+  "sVn": "Vẽ tranh có thể bồi dưỡng trí tưởng tượng của trẻ.",
+  "lHz": "比起<b>制式</b>的<b>教材</b>,自由的游戏更能激发孩子的想像力。",
+  "lPy": "制式 zhìshì · 教材 jiàocái",
+  "lVn": "So với giáo trình khuôn mẫu, trò chơi tự do khơi dậy trí tưởng tượng của trẻ tốt hơn."
+ },
+ {
+  "simp": "创造力",
+  "trad": "創造力",
+  "py": "chuàngzàolì",
+  "seal": "創",
+  "meaning": "khả năng sáng tạo",
+  "collo": [
+   [
+    "培养创造力",
+    "péiyǎng chuàngzàolì",
+    "bồi dưỡng khả năng sáng tạo"
+   ],
+   [
+    "发挥创造力",
+    "fāhuī chuàngzàolì",
+    "phát huy sáng tạo"
+   ]
+  ],
+  "sHz": "艺术教育能提升创造力。",
+  "sPy": "Yìshù jiàoyù néng tíshēng chuàngzàolì.",
+  "sVn": "Giáo dục nghệ thuật có thể nâng cao khả năng sáng tạo.",
+  "lHz": "过于<b>死板</b>的教育方式,反而会<b>限制</b>孩子的创造力。",
+  "lPy": "死板 sǐbǎn · 限制 xiànzhì",
+  "lVn": "Cách giáo dục quá cứng nhắc, ngược lại sẽ hạn chế khả năng sáng tạo của trẻ."
+ },
+ {
+  "simp": "家庭教育",
+  "trad": "家庭教育",
+  "py": "jiātíng jiàoyù",
+  "seal": "家",
+  "meaning": "giáo dục gia đình",
+  "collo": [
+   [
+    "重视家庭教育",
+    "zhòngshì jiātíng jiàoyù",
+    "coi trọng giáo dục gia đình"
+   ]
+  ],
+  "sHz": "家庭教育很重要。",
+  "sPy": "Jiātíng jiàoyù hěn zhòngyào.",
+  "sVn": "Giáo dục gia đình rất quan trọng.",
+  "lHz": "学校教育<b>固然</b>重要,但家庭教育才是孩子<b>人格</b>养成的基础。",
+  "lPy": "固然 gùrán · 人格 réngé",
+  "lVn": "Giáo dục nhà trường tất nhiên quan trọng, nhưng giáo dục gia đình mới là nền tảng hình thành nhân cách của trẻ."
+ },
+ {
+  "simp": "沟通",
+  "trad": "溝通",
+  "py": "gōutōng",
+  "seal": "溝",
+  "meaning": "giao tiếp, trao đổi",
+  "collo": [
+   [
+    "有效沟通",
+    "yǒuxiào gōutōng",
+    "giao tiếp hiệu quả"
+   ],
+   [
+    "跟孩子沟通",
+    "gēn háizi gōutōng",
+    "giao tiếp với con"
+   ]
+  ],
+  "sHz": "父母要多跟孩子沟通。",
+  "sPy": "Fùmǔ yào duō gēn háizi gōutōng.",
+  "sVn": "Cha mẹ nên giao tiếp nhiều với con.",
+  "lHz": "很多家庭问题其实都<b>源自于</b>缺乏有效的沟通。",
+  "lPy": "源自于 yuányúzhū",
+  "lVn": "Rất nhiều vấn đề gia đình thực ra đều bắt nguồn từ việc thiếu giao tiếp hiệu quả."
+ },
+ {
+  "simp": "陪伴",
+  "trad": "陪伴",
+  "py": "péibàn",
+  "seal": "陪",
+  "meaning": "đồng hành, ở bên cạnh",
+  "collo": [
+   [
+    "陪伴孩子成长",
+    "péibàn háizi chéngzhǎng",
+    "đồng hành cùng con lớn lên"
+   ],
+   [
+    "高质量的陪伴",
+    "gāo zhìliàng de péibàn",
+    "thời gian bên con chất lượng"
+   ]
+  ],
+  "sHz": "父母的陪伴很重要。",
+  "sPy": "Fùmǔ de péibàn hěn zhòngyào.",
+  "sVn": "Sự đồng hành của cha mẹ rất quan trọng.",
+  "lHz": "比起<b>物质</b>上的<b>满足</b>,孩子更需要的其实是父母高质量的陪伴。",
+  "lPy": "物质 wùzhí · 满足 mǎnzú",
+  "lVn": "So với sự thỏa mãn về vật chất, thứ trẻ thực sự cần hơn chính là thời gian chất lượng bên cha mẹ."
+ },
+ {
+  "simp": "隔代教育",
+  "trad": "隔代教育",
+  "py": "gédài jiàoyù",
+  "seal": "隔",
+  "meaning": "giáo dục cách thế hệ (ông bà nuôi cháu)",
+  "collo": [
+   [
+    "隔代教育的问题",
+    "gédài jiàoyù de wèntí",
+    "vấn đề của giáo dục cách thế hệ"
+   ]
+  ],
+  "sHz": "隔代教育有利也有弊。",
+  "sPy": "Gédài jiàoyù yǒulì yě yǒubì.",
+  "sVn": "Giáo dục cách thế hệ có lợi cũng có hại.",
+  "lHz": "由于父母工作<b>忙碌</b>,很多孩子从小是靠隔代教育长大的。",
+  "lPy": "忙碌 mánglù",
+  "lVn": "Vì bố mẹ bận rộn công việc, rất nhiều trẻ từ nhỏ lớn lên nhờ ông bà nuôi dạy."
+ },
+ {
+  "simp": "单亲家庭",
+  "trad": "單親家庭",
+  "py": "dānqīn jiātíng",
+  "seal": "單",
+  "meaning": "gia đình đơn thân",
+  "collo": [
+   [
+    "来自单亲家庭",
+    "láizì dānqīn jiātíng",
+    "xuất thân từ gia đình đơn thân"
+   ]
+  ],
+  "sHz": "他成长於单亲家庭。",
+  "sPy": "Tā chéngzhǎng yú dānqīn jiātíng.",
+  "sVn": "Anh ấy lớn lên trong gia đình đơn thân.",
+  "lHz": "单亲家庭的孩子不一定比较缺乏<b>安全感</b>,<b>关键</b>还是在于父母怎么陪伴他们。",
+  "lPy": "安全感 ānquángǎn · 关键 guānjiàn",
+  "lVn": "Trẻ trong gia đình đơn thân không hẳn thiếu cảm giác an toàn hơn, điều then chốt vẫn là cách cha mẹ đồng hành cùng chúng."
+ },
+ {
+  "simp": "代沟",
+  "trad": "代溝",
+  "py": "dàigōu",
+  "seal": "代",
+  "meaning": "khoảng cách thế hệ",
+  "collo": [
+   [
+    "产生代沟",
+    "chǎnshēng dàigōu",
+    "nảy sinh khoảng cách thế hệ"
+   ],
+   [
+    "存在代沟",
+    "cúnzài dàigōu",
+    "tồn tại khoảng cách thế hệ"
+   ]
+  ],
+  "sHz": "父母和孩子之间常有代沟。",
+  "sPy": "Fùmǔ hé háizi zhījiān cháng yǒu dàigōu.",
+  "sVn": "Giữa cha mẹ và con cái thường có khoảng cách thế hệ.",
+  "lHz": "因为成长<b>背景</b>不同,父母跟孩子之间<b>难免</b>会产生代沟。",
+  "lPy": "背景 bèijǐng · 难免 nánmiǎn",
+  "lVn": "Vì bối cảnh trưởng thành khác nhau, giữa cha mẹ và con cái khó tránh khỏi nảy sinh khoảng cách thế hệ."
+ },
+ {
+  "simp": "尊重",
+  "trad": "尊重",
+  "py": "zūnzhòng",
+  "seal": "尊",
+  "meaning": "tôn trọng",
+  "collo": [
+   [
+    "尊重孩子的意见",
+    "zūnzhòng háizi de yìjiàn",
+    "tôn trọng ý kiến của con"
+   ],
+   [
+    "互相尊重",
+    "hùxiāng zūnzhòng",
+    "tôn trọng lẫn nhau"
+   ]
+  ],
+  "sHz": "父母要尊重孩子的想法。",
+  "sPy": "Fùmǔ yào zūnzhòng háizi de xiǎngfǎ.",
+  "sVn": "Cha mẹ nên tôn trọng suy nghĩ của con.",
+  "lHz": "真正的教育,是建立在尊重孩子<b>人格</b>的<b>基础</b>上的。",
+  "lPy": "人格 réngé · 基础 jīchǔ",
+  "lVn": "Giáo dục thực sự được xây dựng trên nền tảng tôn trọng nhân cách của trẻ."
+ },
+ {
+  "simp": "信任",
+  "trad": "信任",
+  "py": "xìnrèn",
+  "seal": "信",
+  "meaning": "tin tưởng",
+  "collo": [
+   [
+    "建立信任",
+    "jiànlì xìnrèn",
+    "xây dựng lòng tin"
+   ],
+   [
+    "互相信任",
+    "hùxiāng xìnrèn",
+    "tin tưởng lẫn nhau"
+   ]
+  ],
+  "sHz": "信任是亲子关系的基础。",
+  "sPy": "Xìnrèn shì qīnzǐ guānxì de jīchǔ.",
+  "sVn": "Tin tưởng là nền tảng của quan hệ cha mẹ - con cái.",
+  "lHz": "一旦父母对孩子失去信任,亲子关系就很难再<b>恢复</b>到原本的样子。",
+  "lPy": "恢复 huīfù",
+  "lVn": "Một khi cha mẹ mất niềm tin vào con, quan hệ cha mẹ-con rất khó khôi phục lại như ban đầu."
+ },
+ {
+  "simp": "责任感",
+  "trad": "責任感",
+  "py": "zérèngǎn",
+  "seal": "責",
+  "meaning": "tinh thần trách nhiệm",
+  "collo": [
+   [
+    "培养责任感",
+    "péiyǎng zérèngǎn",
+    "rèn tinh thần trách nhiệm"
+   ],
+   [
+    "缺乏责任感",
+    "quēfá zérèngǎn",
+    "thiếu tinh thần trách nhiệm"
+   ]
+  ],
+  "sHz": "做家事能培养责任感。",
+  "sPy": "Zuò jiāshì néng péiyǎng zérèngǎn.",
+  "sVn": "Làm việc nhà có thể rèn tinh thần trách nhiệm.",
+  "lHz": "让孩子从小<b>承担</b>一些家庭责任,有助于培养他们的责任感。",
+  "lPy": "承担 chéngdān",
+  "lVn": "Để trẻ đảm nhận một số trách nhiệm gia đình từ nhỏ giúp rèn tinh thần trách nhiệm của chúng."
+ },
+ {
+  "simp": "期望",
+  "trad": "期望",
+  "py": "qīwàng",
+  "seal": "期",
+  "meaning": "kỳ vọng",
+  "collo": [
+   [
+    "父母的期望",
+    "fùmǔ de qīwàng",
+    "kỳ vọng của cha mẹ"
+   ],
+   [
+    "达到期望",
+    "dádào qīwàng",
+    "đạt được kỳ vọng"
+   ]
+  ],
+  "sHz": "孩子承受着父母的期望。",
+  "sPy": "Háizi chéngshòuzhe fùmǔ de qīwàng.",
+  "sVn": "Đứa trẻ đang gánh chịu kỳ vọng của cha mẹ.",
+  "lHz": "过高的期望反而会给孩子带来<b>沉重</b>的心理压力。",
+  "lPy": "沉重 chénzhòng",
+  "lVn": "Kỳ vọng quá cao ngược lại sẽ mang đến áp lực tâm lý nặng nề cho trẻ."
+ },
+ {
+  "simp": "压力",
+  "trad": "壓力",
+  "py": "yālì",
+  "seal": "壓",
+  "meaning": "áp lực",
+  "collo": [
+   [
+    "施加压力",
+    "shījiā yālì",
+    "gây áp lực"
+   ],
+   [
+    "承受压力",
+    "chéngshòu yālì",
+    "chịu áp lực"
+   ]
+  ],
+  "sHz": "现在的孩子压力很大。",
+  "sPy": "Xiànzài de háizi yālì hěn dà.",
+  "sVn": "Trẻ em bây giờ áp lực rất lớn.",
+  "lHz": "家长不应该把自己的<b>焦虑转化</b>成对孩子的压力。",
+  "lPy": "焦虑 jiāolǜ · 转化 zhuǎnhuà",
+  "lVn": "Phụ huynh không nên biến sự lo âu của mình thành áp lực đè lên con cái."
+ },
+ {
+  "simp": "惩罚",
+  "trad": "懲罰",
+  "py": "chéngfá",
+  "seal": "懲",
+  "meaning": "trừng phạt",
+  "collo": [
+   [
+    "惩罚孩子",
+    "chéngfá háizi",
+    "phạt con"
+   ],
+   [
+    "适当的惩罚",
+    "shìdàng de chéngfá",
+    "hình phạt thích hợp"
+   ]
+  ],
+  "sHz": "适当的惩罚是必要的。",
+  "sPy": "Shìdàng de chéngfá shì bìyào de.",
+  "sVn": "Hình phạt thích hợp là cần thiết.",
+  "lHz": "惩罚的目的应该是让孩子明白后果,而不是单纯<b>发泄</b>父母的<b>情绪</b>。",
+  "lPy": "发泄 fāxiè · 情绪 qíngxù",
+  "lVn": "Mục đích của trừng phạt nên là để trẻ hiểu hậu quả, chứ không phải chỉ để cha mẹ trút giận."
+ },
+ {
+  "simp": "奖励",
+  "trad": "獎勵",
+  "py": "jiǎnglì",
+  "seal": "獎",
+  "meaning": "khen thưởng",
+  "collo": [
+   [
+    "奖励孩子",
+    "jiǎnglì háizi",
+    "thưởng cho con"
+   ],
+   [
+    "物质奖励",
+    "wùzhí jiǎnglì",
+    "phần thưởng vật chất"
+   ]
+  ],
+  "sHz": "适当的奖励能激励孩子。",
+  "sPy": "Shìdàng de jiǎnglì néng jīlì háizi.",
+  "sVn": "Phần thưởng thích hợp có thể khích lệ trẻ.",
+  "lHz": "如果过度依赖物质奖励,孩子可能会失去<b>内在</b>的学习<b>动力</b>。",
+  "lPy": "内在 nèizài · 动力 dònglì",
+  "lVn": "Nếu quá phụ thuộc vào phần thưởng vật chất, trẻ có thể mất đi động lực học tập nội tại."
+ },
+ {
+  "simp": "表扬",
+  "trad": "表揚",
+  "py": "biǎoyáng",
+  "seal": "表",
+  "meaning": "biểu dương, khen ngợi",
+  "collo": [
+   [
+    "表扬孩子",
+    "biǎoyáng háizi",
+    "khen con"
+   ],
+   [
+    "及时表扬",
+    "jíshí biǎoyáng",
+    "khen kịp thời"
+   ]
+  ],
+  "sHz": "老师表扬了他的进步。",
+  "sPy": "Lǎoshī biǎoyángle tā de jìnbù.",
+  "sVn": "Thầy giáo đã khen ngợi sự tiến bộ của cậu ấy.",
+  "lHz": "比起结果,父母更应该表扬孩子在<b>过程</b>中<b>付出</b>的努力。",
+  "lPy": "过程 guòchéng · 付出 fùchū",
+  "lVn": "So với kết quả, cha mẹ nên khen ngợi nỗ lực mà con bỏ ra trong quá trình hơn."
+ },
+ {
+  "simp": "批评",
+  "trad": "批評",
+  "py": "pīpíng",
+  "seal": "批",
+  "meaning": "phê bình",
+  "collo": [
+   [
+    "批评教育",
+    "pīpíng jiàoyù",
+    "phê bình giáo dục"
+   ],
+   [
+    "严厉批评",
+    "yánlì pīpíng",
+    "phê bình nghiêm khắc"
+   ]
+  ],
+  "sHz": "过度批评会伤害孩子的自信。",
+  "sPy": "Guòdù pīpíng huì shānghài háizi de zìxìn.",
+  "sVn": "Phê bình quá mức sẽ tổn thương sự tự tin của trẻ.",
+  "lHz": "与其一味批评,不如<b>具体</b>指出孩子哪里做得不好,并告诉他该怎么<b>改进</b>。",
+  "lPy": "具体 jùtǐ · 改进 gǎijìn",
+  "lVn": "Thay vì cứ phê bình, không bằng chỉ ra cụ thể chỗ nào con làm chưa tốt, và nói cho con biết nên cải thiện ra sao."
+ },
+ {
+  "simp": "鼓励",
+  "trad": "鼓勵",
+  "py": "gǔlì",
+  "seal": "鼓",
+  "meaning": "khích lệ",
+  "collo": [
+   [
+    "鼓励孩子",
+    "gǔlì háizi",
+    "khích lệ con"
+   ],
+   [
+    "给予鼓励",
+    "jǐyǔ gǔlì",
+    "đưa ra sự khích lệ"
+   ]
+  ],
+  "sHz": "父母的鼓励很重要。",
+  "sPy": "Fùmǔ de gǔlì hěn zhòngyào.",
+  "sVn": "Sự khích lệ của cha mẹ rất quan trọng.",
+  "lHz": "每次孩子<b>尝试</b>新事物的时候,父母都应该给予鼓励,而不是急着<b>纠正</b>错误。",
+  "lPy": "尝试 chángshì · 纠正 jiūzhèng",
+  "lVn": "Mỗi lần con thử điều mới, cha mẹ nên khích lệ, chứ không phải vội vàng sửa lỗi."
+ },
+ {
+  "simp": "体罚",
+  "trad": "體罰",
+  "py": "tǐfá",
+  "seal": "體",
+  "meaning": "trừng phạt thân thể (đánh đòn)",
+  "collo": [
+   [
+    "体罚孩子",
+    "tǐfá háizi",
+    "đánh đòn con"
+   ],
+   [
+    "禁止体罚",
+    "jìnzhǐ tǐfá",
+    "cấm trừng phạt thân thể"
+   ]
+  ],
+  "sHz": "很多国家已经禁止体罚。",
+  "sPy": "Hěn duō guójiā yǐjīng jìnzhǐ tǐfá.",
+  "sVn": "Nhiều nước đã cấm trừng phạt thân thể.",
+  "lHz": "研究<b>显示</b>,体罚不仅无法真正改变孩子的行为,反而可能<b>造成</b>心理伤害。",
+  "lPy": "显示 xiǎnshì · 造成 zàochéng",
+  "lVn": "Nghiên cứu cho thấy trừng phạt thân thể không những không thể thực sự thay đổi hành vi của trẻ, mà còn có thể gây tổn thương tâm lý."
+ },
+ {
+  "simp": "规矩",
+  "trad": "規矩",
+  "py": "guīju",
+  "seal": "規",
+  "meaning": "quy tắc, phép tắc",
+  "collo": [
+   [
+    "立规矩",
+    "lì guīju",
+    "đặt quy tắc"
+   ],
+   [
+    "守规矩",
+    "shǒu guīju",
+    "tuân theo quy tắc"
+   ]
+  ],
+  "sHz": "家里要有一些规矩。",
+  "sPy": "Jiālǐ yào yǒu yìxiē guīju.",
+  "sVn": "Trong nhà nên có một số quy tắc.",
+  "lHz": "从小为孩子立下<b>清楚</b>的规矩,能帮助他们建立<b>是非观念</b>。",
+  "lPy": "清楚 qīngchu · 是非观念 shìfēi guānniàn",
+  "lVn": "Đặt ra quy tắc rõ ràng cho trẻ từ nhỏ giúp chúng xây dựng quan niệm đúng sai."
+ },
+ {
+  "simp": "犯错",
+  "trad": "犯錯",
+  "py": "fàncuò",
+  "seal": "犯",
+  "meaning": "phạm lỗi",
+  "collo": [
+   [
+    "犯错的孩子",
+    "fàncuò de háizi",
+    "đứa trẻ phạm lỗi"
+   ],
+   [
+    "允许犯错",
+    "yǔnxǔ fàncuò",
+    "cho phép phạm lỗi"
+   ]
+  ],
+  "sHz": "每个人都会犯错。",
+  "sPy": "Měi ge rén dōu huì fàncuò.",
+  "sVn": "Ai cũng sẽ phạm lỗi.",
+  "lHz": "允许孩子在安全的<b>范围</b>内犯错,是他们学习成长的重要方式。",
+  "lPy": "范围 fànwéi",
+  "lVn": "Cho phép trẻ phạm lỗi trong phạm vi an toàn là cách quan trọng để chúng học hỏi và trưởng thành."
+ },
+ {
+  "simp": "反省",
+  "trad": "反省",
+  "py": "fǎnxǐng",
+  "seal": "省",
+  "meaning": "tự kiểm điểm, phản tỉnh",
+  "collo": [
+   [
+    "自我反省",
+    "zìwǒ fǎnxǐng",
+    "tự phản tỉnh bản thân"
+   ],
+   [
+    "让孩子反省",
+    "ràng háizi fǎnxǐng",
+    "để trẻ tự kiểm điểm"
+   ]
+  ],
+  "sHz": "犯错后要学会反省。",
+  "sPy": "Fàncuò hòu yào xuéhuì fǎnxǐng.",
+  "sVn": "Sau khi phạm lỗi phải học cách tự kiểm điểm.",
+  "lHz": "比起<b>罚站</b>,让孩子写下自己错在哪里,更能引导他们真正反省。",
+  "lPy": "罚站 fázhàn",
+  "lVn": "So với việc bắt đứng phạt, để trẻ viết ra mình sai ở đâu giúp dẫn dắt chúng thực sự tự kiểm điểm tốt hơn."
+ },
+ {
+  "simp": "后果",
+  "trad": "後果",
+  "py": "hòuguǒ",
+  "seal": "後",
+  "meaning": "hậu quả",
+  "collo": [
+   [
+    "承担后果",
+    "chéngdān hòuguǒ",
+    "tự chịu hậu quả"
+   ],
+   [
+    "意识到后果",
+    "yìshí dào hòuguǒ",
+    "nhận thức được hậu quả"
+   ]
+  ],
+  "sHz": "每个行为都有后果。",
+  "sPy": "Měi ge xíngwéi dōu yǒu hòuguǒ.",
+  "sVn": "Mỗi hành vi đều có hậu quả.",
+  "lHz": "让孩子<b>亲自</b>承担行为的后果,比一直说教更有<b>效果</b>。",
+  "lPy": "亲自 qīnzì · 效果 xiàoguǒ",
+  "lVn": "Để trẻ tự mình gánh chịu hậu quả của hành vi hiệu quả hơn là cứ giảng giải suông."
+ },
+ {
+  "simp": "学习能力",
+  "trad": "學習能力",
+  "py": "xuéxí nénglì",
+  "seal": "學",
+  "meaning": "khả năng học tập",
+  "collo": [
+   [
+    "提高学习能力",
+    "tígāo xuéxí nénglì",
+    "nâng cao khả năng học tập"
+   ]
+  ],
+  "sHz": "阅读能提升学习能力。",
+  "sPy": "Yuèdú néng tíshēng xuéxí nénglì.",
+  "sVn": "Đọc sách có thể nâng cao khả năng học tập.",
+  "lHz": "良好的学习能力并不是<b>天生</b>的,而是可以<b>透过</b>方法慢慢培养出来的。",
+  "lPy": "天生 tiānshēng · 透过 tòuguò",
+  "lVn": "Khả năng học tập tốt không phải bẩm sinh, mà có thể dần dần được rèn luyện thông qua phương pháp."
+ },
+ {
+  "simp": "补习班",
+  "trad": "補習班",
+  "py": "bǔxíbān",
+  "seal": "補",
+  "meaning": "lớp học thêm",
+  "collo": [
+   [
+    "报补习班",
+    "bào bǔxíbān",
+    "đăng ký lớp học thêm"
+   ],
+   [
+    "上补习班",
+    "shàng bǔxíbān",
+    "đi học thêm"
+   ]
+  ],
+  "sHz": "很多孩子放学后要上补习班。",
+  "sPy": "Hěn duō háizi fàngxué hòu yào shàng bǔxíbān.",
+  "sVn": "Nhiều trẻ sau giờ học phải đi học thêm.",
+  "lHz": "为了不让孩子输在起跑点,不少家长从小学就开始帮孩子报名各种补习班。",
+  "lPy": "输 shū",
+  "lVn": "Để con không thua ngay từ vạch xuất phát, không ít phụ huynh từ tiểu học đã đăng ký cho con đủ loại lớp học thêm."
+ },
+ {
+  "simp": "兴趣班",
+  "trad": "興趣班",
+  "py": "xìngqùbān",
+  "seal": "興",
+  "meaning": "lớp năng khiếu/sở thích",
+  "collo": [
+   [
+    "报兴趣班",
+    "bào xìngqùbān",
+    "đăng ký lớp năng khiếu"
+   ],
+   [
+    "选兴趣班",
+    "xuǎn xìngqùbān",
+    "chọn lớp năng khiếu"
+   ]
+  ],
+  "sHz": "孩子可以自己选兴趣班。",
+  "sPy": "Háizi kěyǐ zìjǐ xuǎn xìngqùbān.",
+  "sVn": "Trẻ có thể tự chọn lớp năng khiếu.",
+  "lHz": "选择兴趣班的时候,应该多听听孩子自己的<b>意见</b>,而不是完全由父母决定。",
+  "lPy": "意见 yìjiàn",
+  "lVn": "Khi chọn lớp năng khiếu, nên lắng nghe ý kiến của chính đứa trẻ, chứ không hoàn toàn do cha mẹ quyết định."
+ },
+ {
+  "simp": "课外活动",
+  "trad": "課外活動",
+  "py": "kèwài huódòng",
+  "seal": "課",
+  "meaning": "hoạt động ngoại khóa",
+  "collo": [
+   [
+    "参加课外活动",
+    "cānjiā kèwài huódòng",
+    "tham gia hoạt động ngoại khóa"
+   ]
+  ],
+  "sHz": "课外活动能丰富孩子的生活。",
+  "sPy": "Kèwài huódòng néng fēngfù háizi de shēnghuó.",
+  "sVn": "Hoạt động ngoại khóa có thể làm phong phú cuộc sống của trẻ.",
+  "lHz": "适当参加课外活动,不仅能<b>放松</b>心情,也能培养<b>团队合作</b>的能力。",
+  "lPy": "放松 fàngsōng · 团队合作 tuánduì hézuò",
+  "lVn": "Tham gia hoạt động ngoại khóa vừa phải không chỉ giúp thư giãn tinh thần, mà còn rèn khả năng làm việc nhóm."
+ },
+ {
+  "simp": "竞争力",
+  "trad": "競爭力",
+  "py": "jìngzhēnglì",
+  "seal": "競",
+  "meaning": "năng lực cạnh tranh",
+  "collo": [
+   [
+    "提高竞争力",
+    "tígāo jìngzhēnglì",
+    "nâng cao năng lực cạnh tranh"
+   ]
+  ],
+  "sHz": "学外语能增加竞争力。",
+  "sPy": "Xué wàiyǔ néng zēngjiā jìngzhēnglì.",
+  "sVn": "Học ngoại ngữ có thể tăng năng lực cạnh tranh.",
+  "lHz": "家长希望透过各种<b>才艺</b>训练,提升孩子未来在社会上的竞争力。",
+  "lPy": "才艺 cáiyì",
+  "lVn": "Phụ huynh hy vọng thông qua các loại huấn luyện tài năng, nâng cao năng lực cạnh tranh trong xã hội tương lai của con."
+ },
+ {
+  "simp": "起跑点",
+  "trad": "起跑點",
+  "py": "qǐpǎodiǎn",
+  "seal": "起",
+  "meaning": "vạch xuất phát",
+  "collo": [
+   [
+    "赢在起跑点",
+    "yíng zài qǐpǎodiǎn",
+    "thắng ngay từ vạch xuất phát"
+   ]
+  ],
+  "sHz": "大家都怕孩子输在起跑点。",
+  "sPy": "Dàjiā dōu pà háizi shū zài qǐpǎodiǎn.",
+  "sVn": "Ai cũng sợ con thua ngay từ vạch xuất phát.",
+  "lHz": "「不要输在起跑点」这句话,给不少父母带来了<b>额外</b>的焦虑。",
+  "lPy": "额外 éwài",
+  "lVn": "Câu nói \"đừng để thua ngay từ vạch xuất phát\" đã mang đến sự lo âu thừa cho không ít phụ huynh."
+ },
+ {
+  "simp": "望子成龙",
+  "trad": "望子成龍",
+  "py": "wàngzǐchénglóng",
+  "seal": "望",
+  "meaning": "mong con thành rồng (kỳ vọng con thành đạt)",
+  "collo": [
+   [
+    "望子成龙的心态",
+    "wàngzǐchénglóng de xīntài",
+    "tâm lý mong con thành đạt"
+   ]
+  ],
+  "sHz": "每个父母都望子成龙。",
+  "sPy": "Měi ge fùmǔ dōu wàngzǐchénglóng.",
+  "sVn": "Cha mẹ nào cũng mong con thành đạt.",
+  "lHz": "望子成龙的心情可以理解,但过度的期待反而会让孩子<b>喘不过气</b>。",
+  "lPy": "喘不过气 chuǎnbúguòqì",
+  "lVn": "Tâm lý mong con thành đạt là điều có thể hiểu, nhưng kỳ vọng quá mức ngược lại khiến trẻ ngộp thở."
+ },
+ {
+  "simp": "全面发展",
+  "trad": "全面發展",
+  "py": "quánmiàn fāzhǎn",
+  "seal": "全",
+  "meaning": "phát triển toàn diện",
+  "collo": [
+   [
+    "注重全面发展",
+    "zhùzhòng quánmiàn fāzhǎn",
+    "chú trọng phát triển toàn diện"
+   ]
+  ],
+  "sHz": "教育应该注重全面发展。",
+  "sPy": "Jiàoyù yīnggāi zhùzhòng quánmiàn fāzhǎn.",
+  "sVn": "Giáo dục nên chú trọng phát triển toàn diện.",
+  "lHz": "除了<b>学业成绩</b>,学校也开始重视学生品格与<b>体能</b>的全面发展。",
+  "lPy": "学业成绩 xuéyè chéngjī · 体能 tǐnéng",
+  "lVn": "Ngoài thành tích học tập, nhà trường cũng bắt đầu coi trọng sự phát triển toàn diện về phẩm chất và thể chất của học sinh."
+ },
+ {
+  "simp": "素质教育",
+  "trad": "素質教育",
+  "py": "sùzhì jiàoyù",
+  "seal": "素",
+  "meaning": "giáo dục tố chất (không chỉ điểm số)",
+  "collo": [
+   [
+    "推动素质教育",
+    "tuīdòng sùzhì jiàoyù",
+    "thúc đẩy giáo dục tố chất"
+   ]
+  ],
+  "sHz": "近年来大家越来越重视素质教育。",
+  "sPy": "Jìnnián lái dàjiā yuè lái yuè zhòngshì sùzhì jiàoyù.",
+  "sVn": "Những năm gần đây mọi người ngày càng coi trọng giáo dục tố chất.",
+  "lHz": "素质教育强调的是孩子的<b>品格</b>、<b>思维</b>与创造力,而不只是考试分数。",
+  "lPy": "品格 pǐngé · 思维 sīwéi",
+  "lVn": "Giáo dục tố chất nhấn mạnh phẩm chất, tư duy và sáng tạo của trẻ, chứ không chỉ là điểm số thi cử."
+ },
+ {
+  "simp": "应试教育",
+  "trad": "應試教育",
+  "py": "yìngshì jiàoyù",
+  "seal": "試",
+  "meaning": "giáo dục theo kiểu thi cử",
+  "collo": [
+   [
+    "应试教育的压力",
+    "yìngshì jiàoyù de yālì",
+    "áp lực của giáo dục thi cử"
+   ]
+  ],
+  "sHz": "应试教育让学生压力很大。",
+  "sPy": "Yìngshì jiàoyù ràng xuésheng yālì hěn dà.",
+  "sVn": "Giáo dục thi cử khiến học sinh áp lực rất lớn.",
+  "lHz": "很多人批评应试教育过于重视分数,而<b>忽略</b>了学生真正的兴趣与能力。",
+  "lPy": "忽略 hūlüè",
+  "lVn": "Nhiều người phê bình giáo dục thi cử quá coi trọng điểm số, mà bỏ qua sở thích và năng lực thực sự của học sinh."
+ }
+];
+
+let order = CARDS.map((_, i) => i);
+
+function renderDeck(){
+  const deck = document.getElementById('deck');
+  deck.innerHTML = '';
+  order.forEach((cardIdx, pos) => {
+    const c = CARDS[cardIdx];
+    const slot = document.createElement('div');
+    slot.className = 'card-slot';
+    slot.style.animationDelay = (pos * 0.02) + 's';
+    slot.onclick = () => slot.classList.toggle('flipped');
+
+    const colloHtml = c.collo.map(([hz, py, vn]) =>
+      `<div class="collo-item">${hz} <span class="cp">${py}</span> — ${vn}</div>`
+    ).join('');
+
+    slot.innerHTML = `
+      <div class="card">
+        <div class="face front">
+          <div class="idx">${String(cardIdx+1).padStart(2,'0')}</div>
+          <div class="seal">${c.seal}</div>
+          <div class="hanzi">${c.simp}<span class="trad">${c.trad}</span></div>
+          <div class="pinyin">${c.py}</div>
+          <div class="tap-hint">TAP TO FLIP</div>
+        </div>
+        <div class="face back">
+          <div class="word-tag">${c.simp} / ${c.trad} · ${c.py}</div>
+          <div class="section-label">Nghĩa</div>
+          <div class="meaning">${c.meaning}</div>
+
+          <div class="section-label">Collocation</div>
+          ${colloHtml}
+
+          <div class="section-label">Ví dụ ngắn</div>
+          <div class="example-short">
+            ${c.sHz}
+            <span class="py-note">${c.sPy}</span>
+          </div>
+          <div class="example-vn-short">${c.sVn}</div>
+
+          <div class="section-label">Ví dụ dài</div>
+          <div class="example">
+            ${c.lHz}
+            <span class="py-note">${c.lPy}</span>
+          </div>
+          <div class="example-vn">${c.lVn}</div>
+        </div>
+      </div>
+    `;
+    deck.appendChild(slot);
+  });
+  document.getElementById('counter').textContent = CARDS.length + ' từ';
+}
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  for(let i = order.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  renderDeck();
+});
+
+renderDeck();
+</script>
+
+</body>
+</html>
